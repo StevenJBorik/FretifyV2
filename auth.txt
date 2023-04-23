@@ -1,0 +1,2 @@
+https://accounts.spotify.com/authorize?client_id=7d9ee0aa1b3d45769dc8bb42786b4c84&response_type=code&redirect_uri=http://localhost:3000/callback&scope=user-read-currently-playing+user-top-read+streaming+user-library-read+user-modify-playback-state	 
+yarn add querystring isomorphic-unfetch jest @testing-library/react @testing-library/jest-dom
