@@ -28,7 +28,7 @@
 
     const fetchData = async () => {
       try {
-        if (tokenData) {
+        if (tokenData && tokenData.code) {
           const code = tokenData.code; 
           const newAccessToken = await fetchAccessToken(code);
           setAccessToken(newAccessToken.access_token);
@@ -43,10 +43,11 @@
 
     const fetchAccessToken = async (code) => {
       try {
-        console.log(router.query.data); 
+        console.log(router.query.data);
         const data = {
           redirect_uri: redirect_uri,
-          grant_type: 'client_credentials',
+          grant_type: 'authorization_code',
+          code: code,
           client_id: client_id,
           client_secret: client_secret
         }
@@ -58,17 +59,17 @@
           },
           body: new URLSearchParams(data),
         });
+        
     
         const tokenData = await response.json();
         const expiresAt = Date.now() + (tokenData.expires_in * 1000);
     
-        
         const accessToken = {
-          ...tokenData.access_token,
+          ...tokenData,
           expires_at: expiresAt
         };
-        
-        setTokenData(accessToken); 
+    
+        setTokenData(accessToken);
         setAccessToken(accessToken.access_token);
         return accessToken;
       } catch (error) {
@@ -76,21 +77,24 @@
         return null;
       }
     };
+    
       
 
 
     const handleSearch = (e) => {
       e.preventDefault();
+      console.log(songQuery); 
+      console.log(accessToken); 
       fetch(`https://api.spotify.com/v1/search?q=${songQuery}&type=track`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       })
-      .then((response) => response.json())
-      .then((data) => {
-        setSearchResults(data.tracks.items);
-      })
-      .catch((error) => console.log(error));
+        .then((response) => response.json())
+        .then((data) => {
+          setSearchResults(data.tracks.items);
+        })
+        .catch((error) => console.log(error));
     };
     
     
