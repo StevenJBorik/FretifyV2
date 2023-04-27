@@ -18,7 +18,7 @@
     const [currentPlaylist, setCurrentPlaylist] = React.useState(null);
     const [currentPlaylistTracks, setCurrentPlaylistTracks] = React.useState([]);
     const [currentTrackIndex, setCurrentTrackIndex] = React.useState(0);
-    const [tokenData, setTokenData] = React.useState(router.query.data ? router.query.data : null);
+    const [tokenData, setTokenData] = React.useState(router.query.data ? JSON.parse(router.query.data) : null);
     const [deviceId, setDeviceId] = React.useState(null);
     const [accessToken, setAccessToken] = React.useState('');
     
@@ -27,59 +27,15 @@
     }, []);
 
     const fetchData = async () => {
-      try {
-        if (tokenData && tokenData.code) {
-          const code = tokenData.code; 
-          const newAccessToken = await fetchAccessToken(code);
-          setAccessToken(newAccessToken.access_token);
+      try { 
+          const code = tokenData.access_token; 
+          console.log('code:', code);
+          setAccessToken(code);
           // setDeviceId(deviceId);
-        }
       } catch (error) {
         console.error('Error getting data:', error.message);
       }
     };
-
-
-
-    const fetchAccessToken = async (code) => {
-      try {
-        console.log(router.query.data);
-        const data = {
-          redirect_uri: redirect_uri,
-          grant_type: 'authorization_code',
-          code: code,
-          client_id: client_id,
-          client_secret: client_secret
-        }
-        const response = await fetch('https://accounts.spotify.com/api/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${btoa(`${client_id}:${client_secret}`)}`
-          },
-          body: new URLSearchParams(data),
-        });
-        
-    
-        const tokenData = await response.json();
-        const expiresAt = Date.now() + (tokenData.expires_in * 1000);
-    
-        const accessToken = {
-          ...tokenData,
-          expires_at: expiresAt
-        };
-    
-        setTokenData(accessToken);
-        setAccessToken(accessToken.access_token);
-        return accessToken;
-      } catch (error) {
-        console.error('Error getting token data:', error.message);
-        return null;
-      }
-    };
-    
-      
-
 
     const handleSearch = (e) => {
       e.preventDefault();
@@ -228,7 +184,7 @@
     
     return (
       <div>
-        <form onSubmit={(e) => handleSearch(e, accessToken)}>
+        <form onSubmit={handleSearch}>
           <label>
             Search for a song: 
             <input type="text" value={songQuery} onChange={(e) => setSongQuery(e.target.value)} />
