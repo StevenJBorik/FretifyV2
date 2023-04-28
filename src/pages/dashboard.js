@@ -21,23 +21,24 @@
     const [tokenData, setTokenData] = React.useState(router.query.data ? JSON.parse(router.query.data) : null);
     const [deviceId, setDeviceId] = React.useState(null);
     const [accessToken, setAccessToken] = React.useState('');
-    const [isSDKReady, setIsSDKReady] = React.useState(false);
+    const [audioPlayerOptions, setAudioPlayerOptions] = React.useState({});
 
     
     React.useEffect(() => {
       const initializeSpotifySDK = () => {
+        window.onSpotifyWebPlaybackSDKReady = () => {
+          setIsSDKReady(true);
+        };
         const script = document.createElement('script');
         script.src = 'https://sdk.scdn.co/spotify-player.js';
         script.async = true;
         document.body.appendChild(script);
-      
-        script.onload = () => {
-          setIsSDKReady(true);
-        };
       };
       fetchData();
-      initializeSpotifySDK(); 
+      initializeSpotifySDK();
     }, []);
+    
+    
 
     const fetchData = async () => {
       try { 
@@ -67,6 +68,7 @@
     
     const getDeviceId = async () => {
       try {
+        console.log(accessToken); 
         const response = await fetch('https://api.spotify.com/v1/me/player/devices', {
           headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -82,70 +84,22 @@
       }
     };
 
-    const handlePlayTrack = async (track) => {
+    const handlePlayTrack = async (index) => {
       try {
-        if (!accessToken) {
-          console.error('Access token not available.');
+        const track = searchResults[index];
+        if (!track) {
+          console.error('Track not found.');
           return;
         }
     
-        if (!isSDKReady || !window.Spotify || !window.Spotify.Player) {
-          console.error('Spotify SDK not loaded.');
-          return;
-        }
+        const audioPlayerOptions = {
+          src: track.preview_url,
+          autoplay: true,
+        };
     
-        const deviceId = await getDeviceId();
-        if (!deviceId) {
-          console.error('Device ID not available.');
-          return;
-        }
+        setAudioPlayerOptions(audioPlayerOptions);
     
-        const player = new window.Spotify.Player({
-          name: 'Web Playback SDK Quick Start Player',
-          getOAuthToken: cb => {
-            cb(accessToken);
-          }
-        });
-    
-        player.addListener('ready', ({ deviceId }) => {
-          console.log('Ready with Device ID', deviceId);
-          fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              uris: [track.uri]
-            })
-          }).then(response => {
-            if (response.ok) {
-              setIsPlaying(true);
-              setCurrentTrack(track);
-    
-              // Check if the track is in the current playlist
-              if (
-                currentPlaylist &&
-                currentPlaylistTracks.some((t) => t.track.uri === track.uri)
-              ) {
-                const index = currentPlaylistTracks.findIndex((t) => t.track.uri === track.uri);
-                setCurrentTrackIndex(index);
-              }
-            } else {
-              console.error('Error playing track:', response.status);
-            }
-          });
-        });
-    
-        player.addListener('not_ready', ({ device_id }) => {
-          console.log('Device ID has gone offline', device_id);
-        });
-    
-        player.addListener('player_state_changed', state => {
-          console.log('Player state changed', state);
-        });
-    
-        player.connect();
+        console.log('Playing track:', track.name);
       } catch (error) {
         console.error('Error playing track:', error.message);
       }
