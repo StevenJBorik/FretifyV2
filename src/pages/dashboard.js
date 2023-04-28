@@ -25,17 +25,8 @@
 
     
     React.useEffect(() => {
-      const initializeSpotifySDK = () => {
-        window.onSpotifyWebPlaybackSDKReady = () => {
-          setIsSDKReady(true);
-        };
-        const script = document.createElement('script');
-        script.src = 'https://sdk.scdn.co/spotify-player.js';
-        script.async = true;
-        document.body.appendChild(script);
-      };
       fetchData();
-      initializeSpotifySDK();
+
     }, []);
     
     
@@ -66,44 +57,21 @@
         .catch((error) => console.log(error));
     };
     
-    const getDeviceId = async () => {
-      try {
-        console.log(accessToken); 
-        const response = await fetch('https://api.spotify.com/v1/me/player/devices', {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
-        });
-
-        const data = await response.json();
-        const device = data.devices.find(device => device.type === 'Computer'); // choose a device type that fits your use case
-        
-        return device.id;
-      } catch (error) {
-        console.error('Error getting device ID:', error.message);
-      }
-    };
-
     const handlePlayTrack = async (index) => {
       try {
+        console.log('searchResults:', searchResults);
         const track = searchResults[index];
+        console.log('selected track:', track);
         if (!track) {
           console.error('Track not found.');
           return;
         }
     
-        const audioPlayerOptions = {
-          src: track.preview_url,
-          autoplay: true,
-        };
-    
-        setAudioPlayerOptions(audioPlayerOptions);
-    
-        console.log('Playing track:', track.name);
+        // ...
       } catch (error) {
         console.error('Error playing track:', error.message);
       }
-    };
+    }
     
         
     const handlePauseTrack = async () => {
