@@ -1,6 +1,7 @@
   import React from 'react';
   import { useRouter } from "next/router"
-  import { getAccessToken } from './api';
+  import { Howl, Howler } from 'howler';
+
 
   const client_id = '6df6b59cb94b4bfbb76803a2092a11ee';
   const client_secret = 'd4e56a8f3ba0415788089db89d49b931';
@@ -22,6 +23,8 @@
     const [deviceId, setDeviceId] = React.useState(null);
     const [accessToken, setAccessToken] = React.useState('');
     const [audioPlayerOptions, setAudioPlayerOptions] = React.useState({});
+    const [trackPlayer, setTrackPlayer] = React.useState(null);
+
 
     
     React.useEffect(() => {
@@ -41,6 +44,16 @@
       }
     };
 
+    const fetchAudioData = async (url) => {
+      try {
+        const response = await fetch(url.toString());
+        const data = await response.arrayBuffer();
+        return data;
+      } catch (error) {
+        console.error('Error fetching audio data:', error.message);
+      }
+    };    
+
     const handleSearch = (e) => {
       e.preventDefault();
       console.log(songQuery); 
@@ -59,41 +72,48 @@
     
     const handlePlayTrack = async (index) => {
       try {
-        console.log('searchResults:', searchResults);
         const track = searchResults[index];
-        console.log('selected track:', track);
         if (!track) {
           console.error('Track not found.');
           return;
         }
     
-        // ...
+        // Pause the current track player, if there is one
+        if (trackPlayer) {
+          trackPlayer.pause();
+        }
+    
+        // Load the audio file using the Spotify API
+        const audioBuffer = await fetchAudioData(track.preview_url);
+        console.log(audioBuffer);
+    
+        // Create a new Howl object for the selected track using the audio buffer
+        const sound = new Howl({
+          src: [audioBuffer],
+          format: 'mp3',
+        });
+    
+        // Start playing the track
+        sound.play();
+    
+        // Save the Howl object as the current track player
+        setTrackPlayer(sound);
       } catch (error) {
         console.error('Error playing track:', error.message);
       }
     }
+
     
-        
     const handlePauseTrack = async () => {
       try {
-        const { access_token, refresh_token } = tokenData;
-
-        const player = new Spotify.Player({
-          name: 'Web Playback SDK Quick Start Player',
-          getOAuthToken: cb => { cb(access_token); }
-        });
-
-        player.addListener('ready', ({ device_id }) => {
-          console.log('Ready with Device ID', device_id);
-          player.togglePlay();
-          setIsPlaying(false);
-        });
-
-        player.connect();
+        if (trackPlayer) {
+          trackPlayer.pause();
+        }
       } catch (error) {
         console.error('Error pausing track:', error.message);
       }
     };
+    
     
 
     const handleSearchPlaylist = async (e) => {
@@ -171,10 +191,10 @@
           <div>
             <h2>Song Results:</h2>
             <ul>
-              {searchResults.map((track) => (
+              {searchResults.map((track, index) => (
                 <li key={track.id}>
                   {track.name} - {track.artists[0].name}{' '}
-                  <button onClick={() => handlePlayTrack(track)}>Play</button>
+                  <button onClick={() => handlePlayTrack(index)}>Play</button>
                 </li>
               ))}
             </ul>
