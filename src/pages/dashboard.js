@@ -1,6 +1,8 @@
   import React from 'react';
   import { useRouter } from "next/router"
   import { Howl, Howler } from 'howler';
+  import SpotifyWebApi from 'spotify-web-api-js';
+
 
 
   const client_id = '6df6b59cb94b4bfbb76803a2092a11ee';
@@ -84,18 +86,34 @@
           trackPlayer.pause();
         }
     
-        // Load the audio file using the Spotify API
-        console.log("prev url", track.preview_url); 
-        const audioBuffer = await fetchAudioData(track.preview_url);
-        console.log(audioBuffer);
+        // Create a new Spotify Web API instance
+        const spotifyApi = new SpotifyWebApi();
     
-        // Create a new Howl object for the selected track using the audio buffer
+        // Set the access token on the Spotify Web API instance
+        console.log(accessToken); 
+        spotifyApi.setAccessToken(accessToken);
+      
+    
+        // Get the full track information using the track URI
+        console.log('Track URI:', track.uri);
+        const response = await spotifyApi.getTrack(track.uri);
+
+        // Get the audio file URL for the full track
+        let audioUrl = null;
+        if (response.body.preview_url) {
+          audioUrl = response.body.preview_url;
+        } else {
+          console.warn('Full track URL not found in response object');
+          console.log(response);
+          return;
+        }
+    
+        // Create a new Howl object for the selected track using the audio URL
         const sound = new Howl({
-          src: [track.preview_url],
+          src: [audioUrl],
           format: 'mp3',
           html5: true,
         });
-        
     
         // Start playing the track
         sound.play();
@@ -104,22 +122,11 @@
         setTrackPlayer(sound);
       } catch (error) {
         console.error('Error playing track:', error.message);
+        console.log('Response object:', error.response);
+
       }
     }
-
     
-    const handlePauseTrack = async () => {
-      try {
-        if (trackPlayer) {
-          trackPlayer.pause();
-        }
-      } catch (error) {
-        console.error('Error pausing track:', error.message);
-      }
-    };
-    
-    
-
     const handleSearchPlaylist = async (e) => {
       e.preventDefault();
       try {
