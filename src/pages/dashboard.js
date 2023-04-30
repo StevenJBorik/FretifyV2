@@ -47,6 +47,7 @@
     const fetchAudioData = async (url) => {
       try {
         const response = await fetch(url.toString());
+        console.log(response);
         const data = await response.arrayBuffer();
         return data;
       } catch (error) {
@@ -84,14 +85,17 @@
         }
     
         // Load the audio file using the Spotify API
+        console.log("prev url", track.preview_url); 
         const audioBuffer = await fetchAudioData(track.preview_url);
         console.log(audioBuffer);
     
         // Create a new Howl object for the selected track using the audio buffer
         const sound = new Howl({
-          src: [audioBuffer],
+          src: [track.preview_url],
           format: 'mp3',
+          html5: true,
         });
+        
     
         // Start playing the track
         sound.play();
@@ -132,36 +136,36 @@
       }
     };
 
-    const handlePlayPlaylist = async (playlist) => {
-      try {
-        // Initialize the Spotify SDK
-        const { Player } = window.Spotify;
-        const player = new Player({
-          name: 'My Spotify Player',
-          getOAuthToken: async (callback) => {
-            const tokenData = await getAccessToken(); // Assuming this function exists to get the token data
-            callback(tokenData.access_token);
-          },
-        });
+    // const handlePlayPlaylist = async (playlist) => {
+    //   try {
+    //     // Initialize the Spotify SDK
+    //     const { Player } = window.Spotify;
+    //     const player = new Player({
+    //       name: 'My Spotify Player',
+    //       getOAuthToken: async (callback) => {
+    //         const tokenData = await getAccessToken(); // Assuming this function exists to get the token data
+    //         callback(tokenData.access_token);
+    //       },
+    //     });
     
-        // Connect to the player and play the playlist
-        await player.connect();
-        await player.pause();
-        await player.clearQueue();
-        await player.play({
-          context_uri: `spotify:playlist:${playlist.id}`,
-        });
+    //     // Connect to the player and play the playlist
+    //     await player.connect();
+    //     await player.pause();
+    //     await player.clearQueue();
+    //     await player.play({
+    //       context_uri: `spotify:playlist:${playlist.id}`,
+    //     });
     
-        // Update the current playlist and tracks
-        setCurrentPlaylist(playlist);
-        setCurrentPlaylistTracks([]);
-        setCurrentTrack(null);
-        setCurrentTrackIndex(0);
-        setIsPlaying(true);
-      } catch (error) {
-        console.error('Error playing playlist:', error.message);
-      }
-    };
+    //     // Update the current playlist and tracks
+    //     setCurrentPlaylist(playlist);
+    //     setCurrentPlaylistTracks([]);
+    //     setCurrentTrack(null);
+    //     setCurrentTrackIndex(0);
+    //     setIsPlaying(true);
+    //   } catch (error) {
+    //     console.error('Error playing playlist:', error.message);
+    //   }
+    // };
     
     const handleSkipTrack = async () => {
       if (currentTrackIndex + 1 >= currentPlaylistTracks.length) {
