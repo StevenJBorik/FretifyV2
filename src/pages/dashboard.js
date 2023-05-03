@@ -2,12 +2,17 @@
   import { useRouter } from "next/router"
   import { Howl, Howler } from 'howler';
   import SpotifyWebApi from 'spotify-web-api-js';
+  import 'url-polyfill'; 
+
+  
 
 
 
   const client_id = '6df6b59cb94b4bfbb76803a2092a11ee';
   const client_secret = 'd4e56a8f3ba0415788089db89d49b931';
   const redirect_uri = 'http://localhost:3000/dashboard'
+  const SpotifyUri = require('spotify-uri');
+
 
 
   const Dashboard = () => {
@@ -74,6 +79,8 @@
     };
     
     const handlePlayTrack = async (index) => {
+      console.log('handlePlayTrack called with index:', index);
+    
       try {
         const track = searchResults[index];
         if (!track) {
@@ -88,44 +95,57 @@
     
         // Create a new Spotify Web API instance
         const spotifyApi = new SpotifyWebApi();
+        console.log(spotifyApi);
     
         // Set the access token on the Spotify Web API instance
-        console.log(accessToken); 
+        console.log(accessToken);
         spotifyApi.setAccessToken(accessToken);
-      
+        console.log(spotifyApi.getAccessToken());
     
         // Get the full track information using the track URI
         console.log('Track URI:', track.uri);
-        const response = await spotifyApi.getTrack(track.uri);
-
-        // Get the audio file URL for the full track
-        let audioUrl = null;
-        if (response.body.preview_url) {
-          audioUrl = response.body.preview_url;
-        } else {
-          console.warn('Full track URL not found in response object');
-          console.log(response);
-          return;
-        }
-    
-        // Create a new Howl object for the selected track using the audio URL
-        const sound = new Howl({
-          src: [audioUrl],
-          format: 'mp3',
-          html5: true,
+        const trackId = track.uri.split(':')[2];
+        console.log(trackId);
+        spotifyApi.getTrack(trackId).then(function(response) {
+        console.log(response); // log the entire response object to see what it contains
+        console.log(response.external_urls); // log the external_urls object to see if it contains the spotify property
+        var trackUrl = response.external_urls.spotify;
+        var sound = new Howl({
+          src: [trackUrl]
         });
-    
-        // Start playing the track
         sound.play();
+      }).catch(function(error) {
+        console.error(error);
+      });
+        
+    
+        // Get the audio file URL for the full track
+        // console.log(response);
+        // // if (!response.body.external_urls.spotify) {
+        // //   // !response.body || !response.body.external_urls ||
+        // //   console.log('Full track URL not found in response object');
+        // //   console.log(response);
+        // //   return;
+        // // }
+        // const fullTrackUrl = response.body.external_urls.spotify;
+        // console.log(fullTrackUrl);
+    
+        // // Create a new Howl object for the selected track using the audio URL
+        // const sound = new Howl({
+        //   src: [fullTrackUrl],
+        //   html5: true,
+        // });
+    
+        // // Start playing the track
+        // sound.play();
     
         // Save the Howl object as the current track player
         setTrackPlayer(sound);
       } catch (error) {
         console.error('Error playing track:', error.message);
         console.log('Response object:', error.response);
-
       }
-    }
+    };
     
     const handleSearchPlaylist = async (e) => {
       e.preventDefault();

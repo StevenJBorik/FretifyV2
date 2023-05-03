@@ -12,12 +12,16 @@
     "dotenv": "^16.0.3",
     "dotenv-webpack": "^8.0.1",
     "howler": "^2.2.3",
+    "import-url": "^2.0.1",
     "next": "13.2.3",
     "node-fetch": "^3.3.0",
     "querystring": "^0.2.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "spotify-web-api-js": "^1.5.2"
+    "spotify-uri": "^3.0.3",
+    "spotify-web-api-js": "^1.5.2",
+    "url-parse": "^1.5.10",
+    "url-polyfill": "^1.1.12"
   },
   "devDependencies": {
     "@testing-library/cypress": "^9.0.0",
