@@ -80,7 +80,7 @@
     
     const handlePlayTrack = async (index) => {
       console.log('handlePlayTrack called with index:', index);
-    
+      let sound; 
       try {
         const track = searchResults[index];
         if (!track) {
@@ -95,49 +95,37 @@
     
         // Create a new Spotify Web API instance
         const spotifyApi = new SpotifyWebApi();
-        console.log(spotifyApi);
     
         // Set the access token on the Spotify Web API instance
-        console.log(accessToken);
         spotifyApi.setAccessToken(accessToken);
-        console.log(spotifyApi.getAccessToken());
     
-        // Get the full track information using the track URI
-        console.log('Track URI:', track.uri);
+        // Get the track information using the track URI
         const trackId = track.uri.split(':')[2];
-        console.log(trackId);
-        spotifyApi.getTrack(trackId).then(function(response) {
-        console.log(response); // log the entire response object to see what it contains
-        console.log(response.external_urls); // log the external_urls object to see if it contains the spotify property
-        var trackUrl = response.external_urls.spotify;
-        var sound = new Howl({
-          src: [trackUrl]
+        const trackInfo = await spotifyApi.getTrack(trackId);
+        console.log(trackInfo);
+        if (!trackInfo.preview_url) {
+          console.error('No preview URL found for track');
+          return;
+        }
+    
+        // Get the full track object using the track ID
+        const fullTrack = await spotifyApi.getTrack(trackId);
+    
+        // Get the first available preview URL or the full track URL
+        const trackUrl = fullTrack.external_urls.spotify;
+    
+        // Create a new Howl object for the selected track using the track URL
+        sound = new Howl({
+          src: [trackUrl],
+          format: ['mp3'],
+          html5: true,
+          autoplay: true 
         });
+        sound.volume(0.75); // Set volume to medium-high
+        console.log('sound object:', sound);
+    
+        // Start playing the track
         sound.play();
-      }).catch(function(error) {
-        console.error(error);
-      });
-        
-    
-        // Get the audio file URL for the full track
-        // console.log(response);
-        // // if (!response.body.external_urls.spotify) {
-        // //   // !response.body || !response.body.external_urls ||
-        // //   console.log('Full track URL not found in response object');
-        // //   console.log(response);
-        // //   return;
-        // // }
-        // const fullTrackUrl = response.body.external_urls.spotify;
-        // console.log(fullTrackUrl);
-    
-        // // Create a new Howl object for the selected track using the audio URL
-        // const sound = new Howl({
-        //   src: [fullTrackUrl],
-        //   html5: true,
-        // });
-    
-        // // Start playing the track
-        // sound.play();
     
         // Save the Howl object as the current track player
         setTrackPlayer(sound);
@@ -146,6 +134,8 @@
         console.log('Response object:', error.response);
       }
     };
+    
+    
     
     const handleSearchPlaylist = async (e) => {
       e.preventDefault();

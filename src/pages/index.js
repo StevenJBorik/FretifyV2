@@ -17,7 +17,7 @@ export default function Index() {
       response_type: 'code',
       client_id: client_id,
       redirect_uri: redirect_uri,
-      scope: 'app-remote-control user-read-email user-read-playback-state user-modify-playback-state streaming playlist-read-private user-library-read user-read-private user-read-email',
+      scope: 'app-remote-control user-top-read user-read-email user-read-playback-state user-modify-playback-state streaming playlist-read-private user-library-read user-read-private user-read-email',
       // show_dialog: 'true'
     });
     router.push(`https://accounts.spotify.com/authorize?${query}`);
