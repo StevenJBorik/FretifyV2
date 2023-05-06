@@ -108,21 +108,24 @@
           return;
         }
     
-        // Get the full track object using the track ID
-        const fullTrack = await spotifyApi.getTrack(trackId);
+        // Get the track audio data using the track ID
+        const trackData = await spotifyApi.getTrack(trackId);
+        console.log(trackData);
     
-        // Get the first available preview URL or the full track URL
-        const trackUrl = fullTrack.external_urls.spotify;
+        // Extract the audio URL from the track data
+        const audioUrl = trackInfo.external_urls.spotify;
+        if (!audioUrl) {
+          console.error('No audio URL found for track');
+          return;
+        }
     
-        // Create a new Howl object for the selected track using the track URL
+        // Create a new Howl object for the selected track using the audio URL
         sound = new Howl({
-          src: [trackUrl],
-          format: ['mp3'],
+          src: [audioUrl],
           html5: true,
-          autoplay: true 
+          autoplay: true,
+          volume: 0.75 // Set volume to medium-high
         });
-        sound.volume(0.75); // Set volume to medium-high
-        console.log('sound object:', sound);
     
         // Start playing the track
         sound.play();
@@ -134,6 +137,7 @@
         console.log('Response object:', error.response);
       }
     };
+    
     
     
     
