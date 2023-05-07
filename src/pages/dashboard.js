@@ -15,7 +15,7 @@
 
 
 
-  const Dashboard = () => {
+  const Dashboard = () => {   
     const router = useRouter(); 
     const [songQuery, setSongQuery] = React.useState('');
     const [playlistQuery, setPlaylistQuery] = React.useState('');
@@ -101,27 +101,26 @@
     
         // Get the track information using the track URI
         const trackId = track.uri.split(':')[2];
-        const trackInfo = await spotifyApi.getTrack(trackId);
-        console.log(trackInfo);
-        if (!trackInfo.preview_url) {
-          console.error('No preview URL found for track');
-          return;
-        }
     
         // Get the track audio data using the track ID
         const trackData = await spotifyApi.getTrack(trackId);
         console.log(trackData);
+
+        const trackDataId = trackData.id; 
+
+        // const encodedUrl = encodeURIComponent(trackDataId);
+
     
         // Extract the audio URL from the track data
-        const audioUrl = trackInfo.external_urls.spotify;
-        if (!audioUrl) {
+        const proxyUrl = `http://localhost:3001/${trackDataId}`;
+        if (!proxyUrl) {
           console.error('No audio URL found for track');
           return;
         }
     
         // Create a new Howl object for the selected track using the audio URL
         sound = new Howl({
-          src: [audioUrl],
+          src: [proxyUrl],
           html5: true,
           autoplay: true,
           volume: 0.75 // Set volume to medium-high
