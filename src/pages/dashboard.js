@@ -4,6 +4,7 @@
   import SpotifyWebApi from 'spotify-web-api-js';
   import 'url-polyfill'; 
 
+
   
 
 
@@ -80,14 +81,17 @@
     
     const handlePlayTrack = async (index) => {
       console.log('handlePlayTrack called with index:', index);
-      let sound; 
+      let sound;
+    
       try {
         const track = searchResults[index];
+    
         if (!track) {
           console.error('Track not found.');
           return;
         }
-    
+        
+        console.log("track", track); 
         // Pause the current track player, if there is one
         if (trackPlayer) {
           trackPlayer.pause();
@@ -101,19 +105,19 @@
     
         // Get the track information using the track URI
         const trackId = track.uri.split(':')[2];
-        const trackInfo = await spotifyApi.getTrack(trackId);
-        console.log(trackInfo);
-        if (!trackInfo.preview_url) {
-          console.error('No preview URL found for track');
-          return;
-        }
     
         // Get the track audio data using the track ID
         const trackData = await spotifyApi.getTrack(trackId);
         console.log(trackData);
+
+        // const trackDataUrl = trackData.external_urls.spotify;
     
         // Extract the audio URL from the track data
-        const audioUrl = trackInfo.external_urls.spotify;
+        // const audioUrl = `http://localhost:3001/spotify-api?trackId=${trackId}&audioUrl=${encodeURIComponent(fullTrackUrl)}&token=${accessToken}`;
+      
+        // const audioUrl = `https://p.scdn.co/mp3/${trackId}?cid=${client_id}`;
+        const audioUrl = `https://p.scdn.co/mp3/${trackId}?cid=${client_id}`;
+
         if (!audioUrl) {
           console.error('No audio URL found for track');
           return;
@@ -122,6 +126,7 @@
         // Create a new Howl object for the selected track using the audio URL
         sound = new Howl({
           src: [audioUrl],
+          format: ['mp3'],
           html5: true,
           autoplay: true,
           volume: 0.75 // Set volume to medium-high
