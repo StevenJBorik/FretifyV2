@@ -1,8 +1,11 @@
   import React from 'react';
   import { useRouter } from "next/router"
   import { Howl, Howler } from 'howler';
-  import SpotifyWebApi from 'spotify-web-api-js';
   import 'url-polyfill'; 
+  import Head from 'next/head';
+  import Script from 'next/script';
+
+
 
 
   
@@ -36,6 +39,11 @@
 
     
     React.useEffect(() => {
+      const script = document.createElement("script");
+      script.src = "https://sdk.scdn.co/spotify-player.js";
+      script.async = true;
+      document.body.appendChild(script);
+      
       fetchData();
 
     }, []);
@@ -100,20 +108,23 @@
         const trackId = track.uri.split(':')[2];
     
         // Create a new Spotify Web Playback SDK instance
-        const player = new Spotify.Player({
-          name: 'Fretify',
-          getOAuthToken: (cb) => { cb(accessToken); },
-          volume: 0.75
-        });
-    
+        window.onSpotifyWebPlaybackSDKReady = () => {
+          const player = new Spotify.Player({
+            name: 'Fretify',
+            getOAuthToken: (cb) => { cb(accessToken); },
+            volume: 0.75
+          });
+        }  
+          
+      
         // Connect to the Web Playback SDK
-        await player.connect();
+        await Player.connect();
     
         // Play the selected track using the track ID
-        await player.play(`spotify:track:${trackId}`);
+        await Player.play(`spotify:track:${trackId}`);
     
         // Save the player object as the current track player
-        setTrackPlayer(player);
+        setTrackPlayer(Player);
       } catch (error) {
         console.error('Error playing track:', error.message);
         console.log('Response object:', error.response);
@@ -187,7 +198,7 @@
     return (
       <div>
         <form onSubmit={handleSearch}>
-          <label>
+          <label> 
             Search for a song: 
             <input type="text" value={songQuery} onChange={(e) => setSongQuery(e.target.value)} />
           </label>
