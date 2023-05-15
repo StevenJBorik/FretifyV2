@@ -16,7 +16,7 @@
 
 
 
-  const Dashboard = () => {   
+  const Dashboard = () => {
     const router = useRouter(); 
     const [songQuery, setSongQuery] = React.useState('');
     const [playlistQuery, setPlaylistQuery] = React.useState('');
@@ -81,7 +81,6 @@
     
     const handlePlayTrack = async (index) => {
       console.log('handlePlayTrack called with index:', index);
-      let sound;
     
       try {
         const track = searchResults[index];
@@ -97,67 +96,29 @@
           trackPlayer.pause();
         }
     
-        // Create a new Spotify Web API instance
-        const spotifyApi = new SpotifyWebApi();
-    
-        // Set the access token on the Spotify Web API instance
-        spotifyApi.setAccessToken(accessToken);
-    
         // Get the track information using the track URI
         const trackId = track.uri.split(':')[2];
     
-        // Get the track audio data using the track ID
-        const trackData = await spotifyApi.getTrack(trackId);
-        console.log(trackData);
-
-<<<<<<< HEAD
-        // const trackDataUrl = trackData.external_urls.spotify;
-    
-        // Extract the audio URL from the track data
-        // const audioUrl = `http://localhost:3001/spotify-api?trackId=${trackId}&audioUrl=${encodeURIComponent(fullTrackUrl)}&token=${accessToken}`;
-      
-        // const audioUrl = `https://p.scdn.co/mp3/${trackId}?cid=${client_id}`;
-        const audioUrl = `https://p.scdn.co/mp3/${trackId}?cid=${client_id}`;
-
-        if (!audioUrl) {
-=======
-        const trackDataId = trackData.id; 
-
-        // const encodedUrl = encodeURIComponent(trackDataId);
-
-    
-        // Extract the audio URL from the track data
-        const proxyUrl = `http://localhost:3001/${trackDataId}`;
-        if (!proxyUrl) {
->>>>>>> 0d0c8c907de140718b638c3f02edd04a8779036e
-          console.error('No audio URL found for track');
-          return;
-        }
-    
-        // Create a new Howl object for the selected track using the audio URL
-        sound = new Howl({
-<<<<<<< HEAD
-          src: [audioUrl],
-          format: ['mp3'],
-=======
-          src: [proxyUrl],
->>>>>>> 0d0c8c907de140718b638c3f02edd04a8779036e
-          html5: true,
-          autoplay: true,
-          volume: 0.75 // Set volume to medium-high
+        // Create a new Spotify Web Playback SDK instance
+        const player = new Spotify.Player({
+          name: 'Fretify',
+          getOAuthToken: (cb) => { cb(accessToken); },
+          volume: 0.75
         });
     
-        // Start playing the track
-        sound.play();
+        // Connect to the Web Playback SDK
+        await player.connect();
     
-        // Save the Howl object as the current track player
-        setTrackPlayer(sound);
+        // Play the selected track using the track ID
+        await player.play(`spotify:track:${trackId}`);
+    
+        // Save the player object as the current track player
+        setTrackPlayer(player);
       } catch (error) {
         console.error('Error playing track:', error.message);
         console.log('Response object:', error.response);
       }
     };
-    
     
     
     
