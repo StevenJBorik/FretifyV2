@@ -43,7 +43,7 @@
       script.src = "https://sdk.scdn.co/spotify-player.js";
       script.async = true;
       document.body.appendChild(script);
-      
+
       fetchData();
 
     }, []);
@@ -118,13 +118,13 @@
           
       
         // Connect to the Web Playback SDK
-        await Player.connect();
+        await player.connect();
     
         // Play the selected track using the track ID
-        await Player.play(`spotify:track:${trackId}`);
+        await player.play(`spotify:track:${trackId}`);
     
         // Save the player object as the current track player
-        setTrackPlayer(Player);
+        setTrackPlayer(player);
       } catch (error) {
         console.error('Error playing track:', error.message);
         console.log('Response object:', error.response);
