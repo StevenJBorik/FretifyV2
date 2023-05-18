@@ -91,6 +91,7 @@
       console.log('handlePlayTrack called with index:', index);
     
       try {
+        // get current track from play button 
         const track = searchResults[index];
     
         if (!track) {
