@@ -19,7 +19,7 @@ const Callback = ({ code, error }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${btoa(`${client_id}:${client_secret}`)}`
+          'Authorization': 'Basic ' + (Buffer.from(client_id + ':' + client_secret).toString('base64')),
         },
         body: new URLSearchParams({
           'grant_type': 'refresh_token',

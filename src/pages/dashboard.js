@@ -39,12 +39,29 @@
 
     
     React.useEffect(() => {
-      const script = document.createElement("script");
-      script.src = "https://sdk.scdn.co/spotify-player.js";
-      script.async = true;
-      document.body.appendChild(script);
+     
 
       fetchData();
+
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        const player = new Spotify.Player({
+          name: 'Fretify',
+          getOAuthToken: (cb) => {
+            cb(accessToken);
+          },
+          volume: 0.75
+        });
+  
+        // Connect to the Web Playback SDK
+        player.connect();
+
+        player.addListener('ready', ({ device_id }) => {
+          console.log('Ready with Device ID', device_id);
+        });
+  
+        // Save the player object as the current track player
+        setTrackPlayer(player);
+      };
 
     }, []);
     
@@ -52,7 +69,12 @@
 
     const fetchData = async () => {
       try { 
-          const code = tokenData.access_token; 
+
+          const script = document.createElement("script");
+          script.src = "https://sdk.scdn.co/spotify-player.js";
+          document.body.appendChild(script);
+          
+          const code = tokenData?.access_token; 
           console.log('code:', code);
           setAccessToken(code);
       } catch (error) {
@@ -91,15 +113,16 @@
       console.log('handlePlayTrack called with index:', index);
     
       try {
-        // get current track from play button 
+        // Get current track from play button 
         const track = searchResults[index];
     
         if (!track) {
           console.error('Track not found.');
           return;
         }
-        
-        console.log("track", track); 
+    
+        console.log('track', track);
+    
         // Pause the current track player, if there is one
         if (trackPlayer) {
           trackPlayer.pause();
@@ -109,15 +132,14 @@
         const trackId = track.uri.split(':')[2];
     
         // Create a new Spotify Web Playback SDK instance
-        window.onSpotifyWebPlaybackSDKReady = () => {
-          const player = new Spotify.Player({
-            name: 'Fretify',
-            getOAuthToken: (cb) => { cb(accessToken); },
-            volume: 0.75
-          });
-        }  
-          
-      
+        const player = new Spotify.Player({
+          name: 'Fretify',
+          getOAuthToken: (cb) => {
+            cb(accessToken);
+          },
+          volume: 0.75
+        });
+    
         // Connect to the Web Playback SDK
         await player.connect();
     
