@@ -87,7 +87,7 @@ const Callback = ({ code, error }) => {
                 'Authorization': `Basic ${btoa(`${client_id}:${client_secret}`)}`
               },
               body: new URLSearchParams({
-                'grant_type': 'client_credentials',
+                'grant_type': 'authorization_code',
                 'code': code,
                 'redirect_uri': redirect_uri,
               }).toString(),

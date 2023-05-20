@@ -27,6 +27,7 @@
     const [searchPlaylistResults, setSearchPlaylistResults] = React.useState([]); 
     const [isPlaying, setIsPlaying] = React.useState(false);
     const [currentTrack, setCurrentTrack] = React.useState(null);
+    const [is_paused, setPaused] = React.useState(false);
     const [currentPlaylist, setCurrentPlaylist] = React.useState(null);
     const [currentPlaylistTracks, setCurrentPlaylistTracks] = React.useState([]);
     const [currentTrackIndex, setCurrentTrackIndex] = React.useState(0);
@@ -34,33 +35,57 @@
     const [deviceId, setDeviceId] = React.useState(null);
     const [accessToken, setAccessToken] = React.useState('');
     const [audioPlayerOptions, setAudioPlayerOptions] = React.useState({});
-    const [trackPlayer, setTrackPlayer] = React.useState(null);
+    const [player, setPlayer] = React.useState(null);
 
 
     
     React.useEffect(() => {
-     
-
+      const script = document.createElement("script");
+      script.src = "https://sdk.scdn.co/spotify-player.js";
+      script.async = true;
+      document.body.appendChild(script);
+    
       fetchData();
 
+      console.log("Window Access Token", tokenData.access_token);
       window.onSpotifyWebPlaybackSDKReady = () => {
-        const player = new Spotify.Player({
+        setAccessToken(tokenData.access_token);
+        const player = new window.Spotify.Player({
           name: 'Fretify',
           getOAuthToken: (cb) => {
-            cb(accessToken);
+            cb(tokenData.access_token);
           },
           volume: 0.75
         });
   
-        // Connect to the Web Playback SDK
-        player.connect();
+        // Save the player object as the current track player
+        setPlayer(player);
 
         player.addListener('ready', ({ device_id }) => {
           console.log('Ready with Device ID', device_id);
         });
-  
-        // Save the player object as the current track player
-        setTrackPlayer(player);
+
+        player.addListener('not_ready', ({ device_id }) => {
+          console.log('Device ID has gone offline', device_id);
+       });
+
+       player.addListener('player_state_changed', ( state => {
+
+        if (!state) {
+            return;
+        }
+    
+        // setTrack(state.track_window.current_track);
+        setPaused(state.paused);
+    
+    
+        player.getCurrentState().then( state => { 
+            (!state)? isPlaying(false) : isPlaying(true) 
+        });
+    
+    }));
+
+       player.connect();
       };
 
     }, []);
@@ -69,11 +94,7 @@
 
     const fetchData = async () => {
       try { 
-
-          const script = document.createElement("script");
-          script.src = "https://sdk.scdn.co/spotify-player.js";
-          document.body.appendChild(script);
-          
+  
           const code = tokenData?.access_token; 
           console.log('code:', code);
           setAccessToken(code);
@@ -124,30 +145,15 @@
         console.log('track', track);
     
         // Pause the current track player, if there is one
-        if (trackPlayer) {
-          trackPlayer.pause();
-        }
+        // if (trackPlayer) {
+        //   trackPlayer.pause();
+        // }
     
         // Get the track information using the track URI
         const trackId = track.uri.split(':')[2];
     
-        // Create a new Spotify Web Playback SDK instance
-        const player = new Spotify.Player({
-          name: 'Fretify',
-          getOAuthToken: (cb) => {
-            cb(accessToken);
-          },
-          volume: 0.75
-        });
-    
-        // Connect to the Web Playback SDK
-        await player.connect();
-    
         // Play the selected track using the track ID
-        await player.play(`spotify:track:${trackId}`);
-    
-        // Save the player object as the current track player
-        setTrackPlayer(player);
+        await player.togglePlay(`spotify:track:${trackId}`);
       } catch (error) {
         console.error('Error playing track:', error.message);
         console.log('Response object:', error.response);
@@ -156,67 +162,67 @@
     
     
     
-    const handleSearchPlaylist = async (e) => {
-      e.preventDefault();
-      try {
-        const response = await fetch(`https://api.spotify.com/v1/search?q=${playlistQuery}&type=playlist`, {
-          headers: {
-            'Authorization': `Bearer ${tokenData.access_token}`
-          }
-        });
-
-        const data = await response.json();
-        setSearchPlaylistResults(data.playlists.items);
-      } catch (error) {
-        console.error('Error searching for playlists:', error.message);
-      }
-    };
-
-    // const handlePlayPlaylist = async (playlist) => {
+    // const handleSearchPlaylist = async (e) => {
+    //   e.preventDefault();
     //   try {
-    //     // Initialize the Spotify SDK
-    //     const { Player } = window.Spotify;
-    //     const player = new Player({
-    //       name: 'My Spotify Player',
-    //       getOAuthToken: async (callback) => {
-    //         const tokenData = await getAccessToken(); // Assuming this function exists to get the token data
-    //         callback(tokenData.access_token);
-    //       },
+    //     const response = await fetch(`https://api.spotify.com/v1/search?q=${playlistQuery}&type=playlist`, {
+    //       headers: {
+    //         'Authorization': `Bearer ${tokenData.access_token}`
+    //       }
     //     });
-    
-    //     // Connect to the player and play the playlist
-    //     await player.connect();
-    //     await player.pause();
-    //     await player.clearQueue();
-    //     await player.play({
-    //       context_uri: `spotify:playlist:${playlist.id}`,
-    //     });
-    
-    //     // Update the current playlist and tracks
-    //     setCurrentPlaylist(playlist);
-    //     setCurrentPlaylistTracks([]);
-    //     setCurrentTrack(null);
-    //     setCurrentTrackIndex(0);
-    //     setIsPlaying(true);
+
+    //     const data = await response.json();
+    //     setSearchPlaylistResults(data.playlists.items);
     //   } catch (error) {
-    //     console.error('Error playing playlist:', error.message);
+    //     console.error('Error searching for playlists:', error.message);
     //   }
     // };
+
+    // // const handlePlayPlaylist = async (playlist) => {
+    // //   try {
+    // //     // Initialize the Spotify SDK
+    // //     const { Player } = window.Spotify;
+    // //     const player = new Player({
+    // //       name: 'My Spotify Player',
+    // //       getOAuthToken: async (callback) => {
+    // //         const tokenData = await getAccessToken(); // Assuming this function exists to get the token data
+    // //         callback(tokenData.access_token);
+    // //       },
+    // //     });
     
-    const handleSkipTrack = async () => {
-      if (currentTrackIndex + 1 >= currentPlaylistTracks.length) {
-        return;
-      }
+    // //     // Connect to the player and play the playlist
+    // //     await player.connect();
+    // //     await player.pause();
+    // //     await player.clearQueue();
+    // //     await player.play({
+    // //       context_uri: `spotify:playlist:${playlist.id}`,
+    // //     });
     
-      try {
-        await player.nextTrack();
-        const nextTrackIndex = currentTrackIndex + 1;
-        setCurrentTrack(currentPlaylistTracks[nextTrackIndex].track);
-        setCurrentTrackIndex(nextTrackIndex);
-      } catch (error) {
-        console.error('Error skipping track:', error.message);
-      }
-    };
+    // //     // Update the current playlist and tracks
+    // //     setCurrentPlaylist(playlist);
+    // //     setCurrentPlaylistTracks([]);
+    // //     setCurrentTrack(null);
+    // //     setCurrentTrackIndex(0);
+    // //     setIsPlaying(true);
+    // //   } catch (error) {
+    // //     console.error('Error playing playlist:', error.message);
+    // //   }
+    // // };
+    
+    // const handleSkipTrack = async () => {
+    //   if (currentTrackIndex + 1 >= currentPlaylistTracks.length) {
+    //     return;
+    //   }
+    
+    //   try {
+    //     await player.nextTrack();
+    //     const nextTrackIndex = currentTrackIndex + 1;
+    //     setCurrentTrack(currentPlaylistTracks[nextTrackIndex].track);
+    //     setCurrentTrackIndex(nextTrackIndex);
+    //   } catch (error) {
+    //     console.error('Error skipping track:', error.message);
+    //   }
+    // };
     
     return (
       <div>
